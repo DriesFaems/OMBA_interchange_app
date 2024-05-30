@@ -15,7 +15,13 @@ st.subheader('This application provides an overview of which courses you have co
 
 # ask user to provide their name
 
-name_input = st.text_input('Please enter your first and last name')
+# create a list of names
+
+names = start_data['Name'].unique()
+
+# create a dropdown menu for the names
+
+name_input = st.selectbox('Please select your name', names)
 
 # filter data based on user input
 
@@ -100,29 +106,56 @@ for i in range(data.shape[0]):
 
 if st.button('Show my data'):
     # print out for first observation for each module which courses have been finished
+    st.markdown('**Overvew of finished courses for each module**')
     number_of_finished_courses = len(finished_courses_meta_list[0])
-    number_of_skipped_courses = len(skipped_courses_meta_list[0])
-    st.write(f'{name_input} has finished {number_of_finished_courses} courses and skipped {number_of_skipped_courses} courses')
+    st.write(f'{name_input} has finished {number_of_finished_courses} courses')
     all_modules = synch['Module'].unique()
-    st.markdown('**Overvew Finished and Skipped courses for each module**')
     for i in range(len(all_modules)):
         module = all_modules[i]
-        st.write(f'{i+1}: {module}:')
-        st.write('Finished courses:')
-        for j in range(len(finished_modules_meta_list[0])):
-            if module in finished_modules_meta_list[0][j]:
-                st.write(finished_courses_meta_list[0][j])
-        st.write('Skipped courses:')
-        for j in range(len(skipped_courses_meta_list[0])):
-            if module in skipped_modules_meta_list[0][j]:
-                st.write(skipped_courses_meta_list[0][j])
+        if module not in finished_modules_meta_list[0]:
+            st.write(f'{i+1}: {module}: No courses have been finished')
+        else:
+            courses = ''
+            for j in range(len(finished_modules_meta_list[0])):
+                if module in finished_modules_meta_list[0][j]:
+                    if courses == '':
+                        courses = (finished_courses_meta_list[0][j])
+                    else:
+                        courses = courses + '; ' + (finished_courses_meta_list[0][j])
+            st.write(f'{i+1}: {module}: {courses}')
+    st.markdown('**Overview of skipped courses for each module**')
+    # count the number of skipped courses
+    number_of_skipped_courses = len(skipped_courses_meta_list[0])
+    # for first observation print the skipped courses
+    st.write(f'{name_input} has skipped {number_of_skipped_courses} courses')
+    for i in range(len(all_modules)):
+        module = all_modules[i]
+        if module not in skipped_modules_meta_list[0]:
+            st.write(f'{i+1}: {module}: No courses have been skipped')
+        else:
+            courses = ''
+            for j in range(len(skipped_modules_meta_list[0])):
+                if module in skipped_modules_meta_list[0][j]:
+                    if courses == '':
+                        courses = (skipped_courses_meta_list[0][j])
+                    else:
+                        courses = courses + '; ' + (skipped_courses_meta_list[0][j])
+            st.write(f'{i+1}: {module}: {courses}')
+
     st.markdown('**Overview of Asynchronous courses**')
     # count the number of asynchronous courses have geen followed
     number_of_asynch_courses = len(asynch_courses_meta_list[0])
     # for first observation print the asynchronous courses that have been followed
-    st.write(f'{name_input} has followed {number_of_asynch_courses} asynchronous course(s):')
-    for i in range(len(asynch_courses_meta_list[0])):
-        st.write(asynch_courses_meta_list[0][i])
+    if number_of_asynch_courses == 0:
+        st.write(f'{name_input} has not followed any asynchronous courses')
+    else:
+        courses = ''
+        for i in range(len(asynch_courses_meta_list[0])):
+            if courses == '':
+                courses = (asynch_courses_meta_list[0][i])
+            else:
+                courses = courses + '; ' + (asynch_courses_meta_list[0][i])
+    st.write(f'{name_input} has followed {number_of_asynch_courses} asynchronous course(s): {courses}')
     st.markdown('**Status international module**')
     if data['International Module'].iloc[0] == 'Yes':
         International = 1
@@ -141,7 +174,6 @@ if st.button('Show my data'):
     st.markdown('**Overview of courses that can still be interchanged per module**')
     for i in range(len(all_modules)):
         module = all_modules[i]
-        st.write(f'{i+1}: {module}:')
         #count the number of finished courses for the module
         number_of_finished_courses_module = 0
         for j in range(len(finished_modules_meta_list[0])):
@@ -153,15 +185,19 @@ if st.button('Show my data'):
             if module in skipped_modules_meta_list[0][j]:
                 number_of_skipped_courses_module += 1
         if number_of_skipped_courses_module > 0 or number_of_finished_courses_module == synch_count['Module'].loc[i]:
-            st.write('You can no longer interchange courses for this module')
+            st.write(f'{i+1}: {module}: You can no longer interchange courses for this module')
         else: 
-            st.write('Courses that can still be interchanged:')
             # select from synch the courses that belong to the module 
             module_courses = synch[synch['Module'] == module]
             # iterate over the courses in the module
+            courses = ''
             for j in range(module_courses.shape[0]):
                 course = module_courses['Course Titles'].iloc[j]
                 if course not in finished_courses_meta_list[0] and course not in skipped_courses_meta_list[0]:
-                    st.write(course)
+                    if courses == '':
+                        courses = course
+                    else:
+                        courses = courses + '; ' + course
+            st.write(f'{i+1}: {module}: Courses that can still be interchanged: {courses}')
 else:
     st.write('Please click the button to show your data')
